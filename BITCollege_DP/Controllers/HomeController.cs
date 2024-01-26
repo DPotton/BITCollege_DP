@@ -1,4 +1,12 @@
-﻿using System;
+﻿/*
+ * Name:    Dylan Potton
+ * Program: Business Information Technology
+ * Course:  ADEV-3008 Programming 3
+ * Created: 01.25.2024
+ * Description: Controller for the Home Model in the Database.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;

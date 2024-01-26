@@ -2,8 +2,7 @@
  * Name:    Dylan Potton
  * Program: Business Information Technology
  * Course:  ADEV-3008 Programming 3
- * Created: 01.15.2024
- * Updated: 01.17.2024
+ * Created: 01.25.2024
  */
 
 using System;
