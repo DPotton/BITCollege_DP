@@ -17,6 +17,9 @@ using System.Web.UI.WebControls.WebParts;
 using System.ComponentModel;
 using Utility;
 using BITCollege_DP.Data;
+using System.EnterpriseServices;
+using System.Security.Cryptography.X509Certificates;
+
 
 namespace BITCollege_DP.Models
 {
@@ -93,7 +96,31 @@ namespace BITCollege_DP.Models
         /// </summary>
         public void ChangeState()
         {
-            
+             using (var dbContext = new BITCollege_DPContext())
+            {
+                Student studentRecord = dbContext.Students.SingleOrDefault(s => s.StudentId == this.StudentId);
+
+                if (studentRecord != null)
+                {
+                    bool stateChanged;
+
+                    do
+                    {
+                        GradePointState currentState = studentRecord.GradePointState;
+
+                        currentState.StateChangeCheck(studentRecord);
+
+                        studentRecord = dbContext.Students.SingleOrDefault(s => s.StudentId == this.StudentId);
+
+                        GradePointState newState = studentRecord.GradePointState;
+
+                        stateChanged = currentState.GradePointStateId != newState.GradePointStateId;
+                    }
+
+                    while (stateChanged);
+
+                }
+            }
         }
 
 
@@ -269,9 +296,17 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override void StateChangeCheck(Student student)
         {
-            throw new NotImplementedException();
+            if (student.GradePointAverage > UpperLimit)
+            {
+                GradePointState proState = ProbationState.GetInstance();
+
+                student.GradePointStateId = proState.GradePointStateId;
+
+                dbContext.SaveChanges();
+            }
         }
     }
+
 
     /// <summary>
     /// ProbationState Model, derived from the GradPointState class.
@@ -329,7 +364,25 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override void StateChangeCheck(Student student)
         {
-            throw new NotImplementedException();
+            // State from Probation to Regular
+            if (student.GradePointAverage > UpperLimit)
+            {
+                GradePointState regState = RegularState.GetInstance();
+
+                student.GradePointStateId = regState.GradePointStateId;
+
+                dbContext.SaveChanges();
+            }
+
+            // State from Probation to Suspended
+            if (student.GradePointAverage < LowerLimit)
+            {
+                GradePointState susState = SuspendedState.GetInstance();
+
+                student.GradePointStateId = susState.GradePointStateId;
+
+                dbContext.SaveChanges();
+            }
         }
     }
 
@@ -389,7 +442,25 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override void StateChangeCheck(Student student)
         {
-            throw new NotImplementedException();
+            // State from Regular to Honours
+            if (student.GradePointAverage > UpperLimit)
+            {
+                GradePointState honState = RegularState.GetInstance();
+
+                student.GradePointStateId = honState.GradePointStateId;
+
+                dbContext.SaveChanges();
+            }
+
+            // State from Regular to Probation
+            if (student.GradePointAverage < LowerLimit)
+            {
+                GradePointState proState = SuspendedState.GetInstance();
+
+                student.GradePointStateId = proState.GradePointStateId;
+
+                dbContext.SaveChanges();
+            }
         }
     }
 
@@ -450,7 +521,15 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override void StateChangeCheck(Student student)
         {
-            throw new NotImplementedException();
+            // State from Honours to Regular
+            if (student.GradePointAverage > LowerLimit)
+            {
+                GradePointState regState = SuspendedState.GetInstance();
+
+                student.GradePointStateId = regState.GradePointStateId;
+
+                dbContext.SaveChanges();
+            }
         }
     }
 
