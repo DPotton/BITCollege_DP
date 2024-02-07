@@ -15,6 +15,8 @@ using System.Net.Security;
 using static BITCollege_DP.Models.GradePointState;
 using System.Web.UI.WebControls.WebParts;
 using System.ComponentModel;
+using Utility;
+using BITCollege_DP.Data;
 
 namespace BITCollege_DP.Models
 {
@@ -87,6 +89,15 @@ namespace BITCollege_DP.Models
         }
 
         /// <summary>
+        /// Method for ChangeState.
+        /// </summary>
+        public void ChangeState()
+        {
+            
+        }
+
+
+        /// <summary>
         /// Navigation property for the GradePointState cardinality.
         /// </summary>
         public virtual GradePointState GradePointState { get; set; }
@@ -135,6 +146,9 @@ namespace BITCollege_DP.Models
     /// </summary>
     public abstract class GradePointState
     {
+        
+        protected static BITCollege_DPContext dbContext = new BITCollege_DPContext();
+
         [Key]
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int GradePointStateId { get; set; }
@@ -179,18 +193,84 @@ namespace BITCollege_DP.Models
 
         }
 
+
+        /// <summary>
+        /// Abstract method for TuitionRateAdjustment.
+        /// </summary>
+        public abstract double TuitionRateAdjustment(Student student);
+
+        /// <summary>
+        /// Abstract method for StateChangeCheck.
+        /// </summary>
+        public abstract void StateChangeCheck(Student student);
+
+
         /// <summary>
         /// Navigation Property for the Student collection cardinality.
         /// </summary>
         public virtual ICollection<Student> Student { get; set; }
+
     }
+
 
     /// <summary>
     /// SuspendedState Model, derived from the GradPointState class.
     /// </summary>
     public class SuspendedState : GradePointState
     {
-        private static SuspendedState suspendedState;
+        private static SuspendedState instance = new SuspendedState();
+
+        private const double SUSPENDED_LOWER_LIMIT = 0.0;
+        private const double SUSPENDED_UPPER_LIMIT = 1.0;
+        private const double SUSPENDED_TUITION_RATE_FACTOR = 1.1;
+
+        /// <summary>
+        /// Method for SuspendState.
+        /// </summary>
+        private SuspendedState()
+        {
+            LowerLimit = SUSPENDED_LOWER_LIMIT;
+            UpperLimit = SUSPENDED_UPPER_LIMIT;
+            TuitionRateFactor = SUSPENDED_TUITION_RATE_FACTOR;
+        }
+
+        /// <summary>
+        /// Method for SuspendedState.
+        /// </summary>
+        public static SuspendedState GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = dbContext.SuspendedStates.SingleOrDefault();
+
+                if (instance == null)
+                {
+                    instance = new SuspendedState();
+
+                    dbContext.SuspendedStates.Add(instance);
+
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Method for TuitionRateAdjustment.
+        /// </summary>
+        public override double TuitionRateAdjustment(Student Student)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Method for StateChangeCheck.
+        /// </summary>
+        public override void StateChangeCheck(Student student)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -198,7 +278,59 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class ProbationState : GradePointState
     {
-        private static ProbationState probationState;
+        private static ProbationState instance = new ProbationState();
+
+        private const double PROBATION_LOWER_LIMIT = 1.00;
+        private const double PROBATION_UPPER_LIMIT = 2.00;
+        private const double PROBATION_TUITION_RATE_FACTOR = 1.075;
+
+        /// <summary>
+        /// Method for ProbationState.
+        /// </summary>
+        private ProbationState()
+        {
+            LowerLimit = PROBATION_LOWER_LIMIT;
+            UpperLimit = PROBATION_UPPER_LIMIT;
+            TuitionRateFactor = PROBATION_TUITION_RATE_FACTOR;
+        }
+
+        /// <summary>
+        /// Method for ProbationState.
+        /// </summary>
+        public static ProbationState GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = dbContext.ProbationStates.SingleOrDefault();
+
+                if (instance == null)
+                {
+                    instance = new ProbationState();
+
+                    dbContext.ProbationStates.Add(instance);
+
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Method for TuitionRateAdjustment.
+        /// </summary>
+        public override double TuitionRateAdjustment(Student Student)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Method for StateChangeCheck.
+        /// </summary>
+        public override void StateChangeCheck(Student student)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -206,7 +338,59 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class RegularState : GradePointState
     {
-        private static RegularState regularState;
+        private static RegularState instance = new RegularState();
+
+        private const double REGULAR_LOWER_LIMIT = 2.00;
+        private const double REGULAR_UPPER_LIMIT = 3.70;
+        private const double REGULAR_TUITION_RATE_FACTOR = 1.0;
+
+        /// <summary>
+        /// Method for RegularState.
+        /// </summary>
+        private RegularState()
+        {
+            LowerLimit = REGULAR_LOWER_LIMIT;
+            UpperLimit = REGULAR_UPPER_LIMIT;
+            TuitionRateFactor = REGULAR_TUITION_RATE_FACTOR;
+        }
+
+        /// <summary>
+        /// Method for RegularState.
+        /// </summary>
+        public static RegularState GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = dbContext.RegularStates.SingleOrDefault();
+
+                if (instance == null)
+                {
+                    instance = new RegularState();
+
+                    dbContext.RegularStates.Add(instance);
+
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Method for TuitionRateAdjustment.
+        /// </summary>
+        public override double TuitionRateAdjustment(Student Student)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Method for StateChangeCheck.
+        /// </summary>
+        public override void StateChangeCheck(Student student)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -214,7 +398,60 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class HonoursState : GradePointState
     {
-        private static HonoursState honoursState;
+        private static HonoursState instance = new HonoursState();
+
+        // Private constants for readability
+        private const double HONOURS_LOWER_LIMIT = 3.70;
+        private const double HONOURS_UPPER_LIMIT = 4.50;
+        private const double HONOURS_TUITION_RATE_FACTOR = 0.9;
+
+        /// <summary>
+        /// Method for HonoursState.
+        /// </summary>
+        private HonoursState()
+        {
+            LowerLimit = HONOURS_LOWER_LIMIT;
+            UpperLimit = HONOURS_UPPER_LIMIT;
+            TuitionRateFactor = HONOURS_TUITION_RATE_FACTOR;
+        }
+
+        /// <summary>
+        /// Method for HonoursState.
+        /// </summary>
+        public static HonoursState GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = dbContext.HonoursStates.SingleOrDefault();
+
+                if (instance == null)
+                {
+                    instance = new HonoursState();
+
+                    dbContext.HonoursStates.Add(instance);
+
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Method for TuitionRateAdjustment.
+        /// </summary>
+        public override double TuitionRateAdjustment(Student Student)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Method for StateChangeCheck.
+        /// </summary>
+        public override void StateChangeCheck(Student student)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
