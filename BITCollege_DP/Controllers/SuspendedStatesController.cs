@@ -26,7 +26,7 @@ namespace BITCollege_DP.Controllers
         // GET: SuspendedStates
         public ActionResult Index()
         {
-            return View(db.SuspendedStates.ToList());
+            return View(SuspendedState.GetInstance());
         }
 
         // GET: SuspendedStates/Details/5

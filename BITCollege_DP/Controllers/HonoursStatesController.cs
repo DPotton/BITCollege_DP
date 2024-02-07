@@ -26,7 +26,7 @@ namespace BITCollege_DP.Controllers
         // GET: HonoursStates
         public ActionResult Index()
         {
-            return View(db.GradePointStates.ToList());
+            return View(HonoursState.GetInstance());
         }
 
         // GET: HonoursStates/Details/5
