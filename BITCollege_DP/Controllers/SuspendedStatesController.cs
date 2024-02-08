@@ -80,7 +80,6 @@ namespace BITCollege_DP.Controllers
             {
                 return HttpNotFound();
             }
-
             return View(suspendedState);
         }
 

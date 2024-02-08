@@ -19,7 +19,6 @@ using Utility;
 using BITCollege_DP.Data;
 using System.EnterpriseServices;
 using System.Security.Cryptography.X509Certificates;
-using System.Data.Entity;
 
 
 namespace BITCollege_DP.Models
@@ -91,23 +90,35 @@ namespace BITCollege_DP.Models
             get { return String.Format("{0} {1} {2}", Address, City, Province); }
         }
 
-
-        private BITCollege_DPContext dbContext = new BITCollege_DPContext();
-
         /// <summary>
         /// Method for ChangeState.
         /// </summary>
-        /// 
         public void ChangeState()
         {
-            GradePointState currentState = dbContext.GradePointStates.Find(GradePointStateId);
-            int newState = 0;
-
-            while (newState != currentState.GradePointStateId)
+             using (var dbContext = new BITCollege_DPContext())
             {
-                currentState.StateChangeCheck(this);
-                newState = currentState.GradePointStateId;
-                currentState = dbContext.GradePointStates.Find(GradePointStateId);
+                Student studentRecord = dbContext.Students.SingleOrDefault(s => s.StudentId == this.StudentId);
+
+                if (studentRecord != null)
+                {
+                    bool stateChanged;
+
+                    do
+                    {
+                        GradePointState currentState = studentRecord.GradePointState;
+
+                        currentState.StateChangeCheck(studentRecord);
+
+                        studentRecord = dbContext.Students.SingleOrDefault(s => s.StudentId == this.StudentId);
+
+                        GradePointState newState = studentRecord.GradePointState;
+
+                        stateChanged = currentState.GradePointStateId != newState.GradePointStateId;
+                    }
+
+                    while (stateChanged);
+
+                }
             }
         }
 
@@ -161,6 +172,12 @@ namespace BITCollege_DP.Models
     /// </summary>
     public abstract class GradePointState
     {
+<<<<<<< HEAD
+=======
+        
+        protected static BITCollege_DPContext dbContext = new BITCollege_DPContext();
+
+>>>>>>> parent of ae85217 (Added implementation for the StateChangeCheck and TuitionRateAdjument methods for the GradePointState Subclasses.)
         [Key]
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int GradePointStateId { get; set; }
@@ -216,12 +233,12 @@ namespace BITCollege_DP.Models
         /// </summary>
         public abstract void StateChangeCheck(Student student);
 
-        protected static BITCollege_DPContext dbContext = new BITCollege_DPContext();
 
         /// <summary>
         /// Navigation Property for the Student collection cardinality.
         /// </summary>
         public virtual ICollection<Student> Student { get; set; }
+
     }
 
 
@@ -230,7 +247,7 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class SuspendedState : GradePointState
     {
-        private static SuspendedState instance;
+        private static SuspendedState instance = new SuspendedState();
 
         private const double SUSPENDED_LOWER_LIMIT = 0.0;
         private const double SUSPENDED_UPPER_LIMIT = 1.0;
@@ -259,7 +276,7 @@ namespace BITCollege_DP.Models
                 {
                     instance = new SuspendedState();
 
-                    dbContext.GradePointStates.Add(instance);
+                    dbContext.SuspendedStates.Add(instance);
 
                     dbContext.SaveChanges();
                 }
@@ -271,19 +288,9 @@ namespace BITCollege_DP.Models
         /// <summary>
         /// Method for TuitionRateAdjustment.
         /// </summary>
-        public override double TuitionRateAdjustment(Student student)
+        public override double TuitionRateAdjustment(Student Student)
         {
-            double adjustedTuition = TuitionRateFactor;
-
-            if (student.GradePointAverage < 0.75)
-            {
-                adjustedTuition += 0.2;
-            }
-            else if (student.GradePointAverage < 0.50)
-            {
-                adjustedTuition += 0.5;
-            }
-            return adjustedTuition;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -293,7 +300,11 @@ namespace BITCollege_DP.Models
         {
             if (student.GradePointAverage > UpperLimit)
             {
-                student.GradePointStateId = ProbationState.GetInstance().GradePointStateId;
+                GradePointState proState = ProbationState.GetInstance();
+
+                student.GradePointStateId = proState.GradePointStateId;
+
+                dbContext.SaveChanges();
             }
         }
     }
@@ -304,8 +315,13 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class ProbationState : GradePointState
     {
+<<<<<<< HEAD
         private static ProbationState instance;
         Course courseAmount;
+=======
+        private static ProbationState instance = new ProbationState();
+
+>>>>>>> parent of ae85217 (Added implementation for the StateChangeCheck and TuitionRateAdjument methods for the GradePointState Subclasses.)
         private const double PROBATION_LOWER_LIMIT = 1.00;
         private const double PROBATION_UPPER_LIMIT = 2.00;
         private const double PROBATION_TUITION_RATE_FACTOR = 1.075;
@@ -333,7 +349,7 @@ namespace BITCollege_DP.Models
                 {
                     instance = new ProbationState();
 
-                    dbContext.GradePointStates.Add(instance);
+                    dbContext.ProbationStates.Add(instance);
 
                     dbContext.SaveChanges();
                 }
@@ -345,8 +361,9 @@ namespace BITCollege_DP.Models
         /// <summary>
         /// Method for TuitionRateAdjustment.
         /// </summary>
-        public override double TuitionRateAdjustment(Student student)
+        public override double TuitionRateAdjustment(Student Student)
         {
+<<<<<<< HEAD
             IQueryable<Registration> courses = dbContext.Registrations.Where(x => x.StudentId == student.StudentId && x.Grade != null);
             int courseCount = courses.Count();
 
@@ -358,6 +375,9 @@ namespace BITCollege_DP.Models
             {
                 return courseAmount.TuitionAmount * 0.075;
             }
+=======
+            throw new NotImplementedException();
+>>>>>>> parent of ae85217 (Added implementation for the StateChangeCheck and TuitionRateAdjument methods for the GradePointState Subclasses.)
         }
 
         /// <summary>
@@ -370,13 +390,17 @@ namespace BITCollege_DP.Models
             {
                 GradePointState regState = RegularState.GetInstance();
                 student.GradePointStateId = regState.GradePointStateId;
+
+                dbContext.SaveChanges();
             }
 
             // State from Probation to Suspended
-            else if (student.GradePointAverage < LowerLimit)
+            if (student.GradePointAverage < LowerLimit)
             {
                 GradePointState susState = SuspendedState.GetInstance();
                 student.GradePointStateId = susState.GradePointStateId;
+
+                dbContext.SaveChanges();
             }
         }
     }
@@ -386,7 +410,7 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class RegularState : GradePointState
     {
-        private static RegularState instance;
+        private static RegularState instance = new RegularState();
 
         private const double REGULAR_LOWER_LIMIT = 2.00;
         private const double REGULAR_UPPER_LIMIT = 3.70;
@@ -415,7 +439,7 @@ namespace BITCollege_DP.Models
                 {
                     instance = new RegularState();
 
-                    dbContext.GradePointStates.Add(instance);
+                    dbContext.RegularStates.Add(instance);
 
                     dbContext.SaveChanges();
                 }
@@ -440,14 +464,21 @@ namespace BITCollege_DP.Models
             // State from Regular to Honours
             if (student.GradePointAverage > UpperLimit)
             {
-                student.GradePointStateId = HonoursState.GetInstance().GradePointStateId;
+                GradePointState honState = RegularState.GetInstance();
+
+                student.GradePointStateId = honState.GradePointStateId;
+
+                dbContext.SaveChanges();
             }
 
             // State from Regular to Probation
-            else if (student.GradePointAverage < LowerLimit)
+            if (student.GradePointAverage < LowerLimit)
             {
+                GradePointState proState = SuspendedState.GetInstance();
 
-                student.GradePointStateId = ProbationState.GetInstance().GradePointStateId;
+                student.GradePointStateId = proState.GradePointStateId;
+
+                dbContext.SaveChanges();
             }
         }
     }
@@ -457,7 +488,7 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class HonoursState : GradePointState
     {
-        private static HonoursState instance;
+        private static HonoursState instance = new HonoursState();
 
         // Private constants for readability
         private const double HONOURS_LOWER_LIMIT = 3.70;
@@ -487,7 +518,7 @@ namespace BITCollege_DP.Models
                 {
                     instance = new HonoursState();
 
-                    dbContext.GradePointStates.Add(instance);
+                    dbContext.HonoursStates.Add(instance);
 
                     dbContext.SaveChanges();
                 }
@@ -510,9 +541,13 @@ namespace BITCollege_DP.Models
         public override void StateChangeCheck(Student student)
         {
             // State from Honours to Regular
-            if (student.GradePointAverage < LowerLimit)
+            if (student.GradePointAverage > LowerLimit)
             {
-                student.GradePointStateId = RegularState.GetInstance().GradePointStateId;
+                GradePointState regState = SuspendedState.GetInstance();
+
+                student.GradePointStateId = regState.GradePointStateId;
+
+                dbContext.SaveChanges();
             }
         }
     }
