@@ -63,7 +63,6 @@ namespace BITCollege_DP.Controllers
             if (ModelState.IsValid)
             {
                 db.Students.Add(student);
-
                 student.ChangeState();
                 db.SaveChanges();
                 return RedirectToAction("Index");
@@ -105,6 +104,7 @@ namespace BITCollege_DP.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
+
             ViewBag.AcademicProgramId = new SelectList(db.AcademicPrograms, "AcademicProgramId", "ProgramAcronym", student.AcademicProgramId);
             ViewBag.GradePointStateId = new SelectList(db.GradePointStates, "GradePointStateId", "Description", student.GradePointStateId);
             return View(student);
