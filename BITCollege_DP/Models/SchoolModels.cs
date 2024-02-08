@@ -74,8 +74,7 @@ namespace BITCollege_DP.Models
 
         [Required (ErrorMessage = "Please enter an Outstanding Fee value.")]
         [Display(Name = "Fees")]
-        [DisplayFormat(DataFormatString = "{0:c")]
-        [Range(0.00, 999999.99)]
+        [DisplayFormat(DataFormatString = "{0:C2")]
         public double OutstandingFees { get; set; }
 
         public string Notes { get; set; }
@@ -162,9 +161,6 @@ namespace BITCollege_DP.Models
     /// </summary>
     public abstract class GradePointState
     {
-        
-        
-
         [Key]
         [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
         public int GradePointStateId { get; set; }
@@ -309,7 +305,7 @@ namespace BITCollege_DP.Models
     public class ProbationState : GradePointState
     {
         private static ProbationState instance;
-
+        Course courseAmount;
         private const double PROBATION_LOWER_LIMIT = 1.00;
         private const double PROBATION_UPPER_LIMIT = 2.00;
         private const double PROBATION_TUITION_RATE_FACTOR = 1.075;
@@ -351,25 +347,16 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override double TuitionRateAdjustment(Student student)
         {
-
             IQueryable<Registration> courses = dbContext.Registrations.Where(x => x.StudentId == student.StudentId && x.Grade != null);
-
             int courseCount = courses.Count();
 
-            if (student.GradePointState == ProbationState.GetInstance())
+            if (student.GradePointState == ProbationState.GetInstance() && courseCount >= 5)
             {
-                return student.OutstandingFees * 0.075;
+                return courseAmount.TuitionAmount * 0.035;
             }
             else
             {
-                if (courseCount >= 5)
-                {
-                    return student.OutstandingFees * 0.035;
-                }
-                else
-                {
-                    return TuitionRateFactor;
-                }
+                return courseAmount.TuitionAmount * 0.075;
             }
         }
 
@@ -382,7 +369,6 @@ namespace BITCollege_DP.Models
             if (student.GradePointAverage > UpperLimit)
             {
                 GradePointState regState = RegularState.GetInstance();
-
                 student.GradePointStateId = regState.GradePointStateId;
             }
 
@@ -390,7 +376,6 @@ namespace BITCollege_DP.Models
             else if (student.GradePointAverage < LowerLimit)
             {
                 GradePointState susState = SuspendedState.GetInstance();
-
                 student.GradePointStateId = susState.GradePointStateId;
             }
         }
