@@ -69,7 +69,8 @@ namespace BITCollege_DP.Models
         public DateTime DateCreated { get; set; }
 
         [Display(Name = "Grade Point\nAverage")]
-        [Range(0.00, 4.50)]
+        [DisplayFormat(DataFormatString = "{0:F2}")]
+        [Range(0.00, 4.50, ErrorMessage ="GPA must be between 0 and 4.50")]
         public double? GradePointAverage { get; set; }
 
         [Required(ErrorMessage = "Please enter an Outstanding Fee value.")]

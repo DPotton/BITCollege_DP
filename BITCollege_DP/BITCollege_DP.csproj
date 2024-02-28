@@ -162,6 +162,10 @@
     <Compile Include="Migrations\202402280214219_StoredProcedures.designer.cs">
       <DependentUpon>202402280214219_StoredProcedures.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202402281655292_A4Complete.cs" />
+    <Compile Include="Migrations\202402281655292_A4Complete.designer.cs">
+      <DependentUpon>202402281655292_A4Complete.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\SchoolModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -339,6 +343,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202402280214219_StoredProcedures.resx">
       <DependentUpon>202402280214219_StoredProcedures.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202402281655292_A4Complete.resx">
+      <DependentUpon>202402281655292_A4Complete.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
