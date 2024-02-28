@@ -44,5 +44,19 @@ namespace BITCollege_DP.Data
         public System.Data.Entity.DbSet<BITCollege_DP.Models.AuditCourse> AuditCourses { get; set; }
 
         public System.Data.Entity.DbSet<BITCollege_DP.Models.MasteryCourse> MasteryCourses { get; set; }
+
+
+        public System.Data.Entity.DbSet<BITCollege_DP.Models.NextGradedCourse> NextGradedCourses  { get; set; }
+
+        public System.Data.Entity.DbSet<BITCollege_DP.Models.NextAuditCourse> NextAuditCourses { get; set; }
+
+        public System.Data.Entity.DbSet<BITCollege_DP.Models.NextMasteryCourse> NextMasteryCourses { get; set; }
+
+
+        public System.Data.Entity.DbSet<BITCollege_DP.Models.NextUniqueNumber> NextUniqueNumbers { get; set; }
+
+        public System.Data.Entity.DbSet<BITCollege_DP.Models.NextRegistration> NextRegistrations { get; set; }
+
+        public System.Data.Entity.DbSet<BITCollege_DP.Models.NextStudent> NextStudents { get; set; }
     }
 }

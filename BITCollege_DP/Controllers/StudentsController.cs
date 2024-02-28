@@ -60,6 +60,8 @@ namespace BITCollege_DP.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "StudentId,GradePointStateId,AcademicProgramId,StudentNumber,FirstName,LastName,Address,City,Province,DateCreated,GradePointAverage,OutstandingFees,Notes")] Student student)
         {
+            student.SetNextStudentNumber();
+
             if (ModelState.IsValid)
             {
                 db.Students.Add(student);

@@ -20,6 +20,8 @@ using BITCollege_DP.Data;
 using System.EnterpriseServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Data.Entity;
+using System.Data.SqlClient;
+using System.Data;
 
 
 namespace BITCollege_DP.Models
@@ -40,8 +42,6 @@ namespace BITCollege_DP.Models
         [ForeignKey("AcademicProgram")]
         public int? AcademicProgramId { get; set; }
 
-        [Required(ErrorMessage = "Please enter a valid Student Number.")]
-        [Range(10000000, 99999999)]
         [Display(Name = "Student\nNumber")]
         public long StudentNumber { get; set; }
 
@@ -74,8 +74,7 @@ namespace BITCollege_DP.Models
 
         [Required(ErrorMessage = "Please enter an Outstanding Fee value.")]
         [Display(Name = "Fees")]
-        [DisplayFormat(DataFormatString = "{0:c")]
-        [Range(0.00, 999999.99)]
+        [DisplayFormat(DataFormatString = "{0:C2}")]
         public double OutstandingFees { get; set; }
 
         public string Notes { get; set; }
@@ -109,6 +108,21 @@ namespace BITCollege_DP.Models
                 currentState.StateChangeCheck(this);
                 newState = currentState.GradePointStateId;
                 currentState = dbContext.GradePointStates.Find(GradePointStateId);
+            }
+        }
+
+        /// <summary>
+        /// Method for SetNextStudentNumber.
+        /// </summary>
+        public void SetNextStudentNumber()
+        {
+            string discriminator = "S";
+
+            long? nextNumber = StoredProcedure.NextNumber(discriminator);
+
+            if (nextNumber.HasValue)
+            {
+                this.StudentNumber = nextNumber.Value;
             }
         }
 
@@ -308,6 +322,7 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class ProbationState : GradePointState
     {
+        Course courseAmount;
         private static ProbationState instance;
 
         private const double PROBATION_LOWER_LIMIT = 1.00;
@@ -351,25 +366,17 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override double TuitionRateAdjustment(Student student)
         {
-
             IQueryable<Registration> courses = dbContext.Registrations.Where(x => x.StudentId == student.StudentId && x.Grade != null);
 
             int courseCount = courses.Count();
 
-            if (student.GradePointState == ProbationState.GetInstance())
+            if(student.GradePointState == ProbationState.GetInstance() && courseCount >= 5)
             {
-                return student.OutstandingFees * 0.075;
+                return courseAmount.TuitionAmount * 0.035;
             }
             else
             {
-                if (courseCount >= 5)
-                {
-                    return student.OutstandingFees * 0.035;
-                }
-                else
-                {
-                    return TuitionRateFactor;
-                }
+                return courseAmount.TuitionAmount * 0.075;
             }
         }
 
@@ -544,7 +551,6 @@ namespace BITCollege_DP.Models
         [ForeignKey("AcademicProgram")]
         public int? AcademicProgramId { get; set; }
 
-        [Required]
         [Display(Name = "Course\nNumber")]
         public string CourseNumber { get; set; }
 
@@ -588,6 +594,12 @@ namespace BITCollege_DP.Models
         public string Notes { get; set; }
 
         /// <summary>
+        /// Method for SetNextCourseNumber.
+        /// </summary>
+        public abstract void SetNextCourseNumber();
+
+
+        /// <summary>
         /// Navigation Property for the Registration cardinality.
         /// </summary>
         public virtual ICollection<Registration> Registration { get; set; }
@@ -612,6 +624,24 @@ namespace BITCollege_DP.Models
         [DisplayName("Exams")]
         [DisplayFormat(DataFormatString = "{0:P}")]
         public double ExamWeight { get; set; }
+
+        /// <summary>
+        /// SetNextCourseNumber method.
+        /// </summary>
+        public override void SetNextCourseNumber()
+        {
+            string discriminator = "G";
+
+            long? nextNumber = StoredProcedure.NextNumber(discriminator);
+
+            if (nextNumber.HasValue)
+            {
+                this.CourseNumber = $"G-{nextNumber}";
+            }
+        }
+
+
+
     }
 
     /// <summary>
@@ -622,6 +652,21 @@ namespace BITCollege_DP.Models
         [Required]
         [Display(Name = "Maximum\nAttempts")]
         public int MaximumAttempts { get; set; }
+
+        /// <summary>
+        /// SetNextCourseNumber method.
+        /// </summary>
+        public override void SetNextCourseNumber()
+        {
+            string discriminator = "M";
+
+            long? nextNumber = StoredProcedure.NextNumber(discriminator);
+
+            if (nextNumber.HasValue)
+            {
+                this.CourseNumber = $"M-{nextNumber}";
+            }
+        }
     }
 
     /// <summary>
@@ -629,7 +674,20 @@ namespace BITCollege_DP.Models
     /// </summary>
     public class AuditCourse : Course
     {
+        /// <summary>
+        /// SetNextCourseNumber method.
+        /// </summary>
+        public override void SetNextCourseNumber()
+        {
+            string discriminator = "A";
 
+            long? nextNumber = StoredProcedure.NextNumber(discriminator);
+
+            if (nextNumber.HasValue)
+            {
+                this.CourseNumber = $"A-{nextNumber}";
+            }
+        }
     }
 
     /// <summary>
@@ -649,7 +707,6 @@ namespace BITCollege_DP.Models
         [ForeignKey("Course")]
         public int CourseId { get; set; }
 
-        [Required]
         [Display(Name = "Registration\nNumber")]
         public long RegistrationNumber { get; set; }
 
@@ -665,6 +722,21 @@ namespace BITCollege_DP.Models
         public string Notes { get; set; }
 
         /// <summary>
+        /// Method for SetNextRegistrationNumber.
+        /// </summary>
+        public void SetNextRegistrationNumber()
+        {
+            string discriminator = "R";
+
+            long? nextNumber = StoredProcedure.NextNumber(discriminator);
+
+            if (nextNumber.HasValue)
+            {
+                this.RegistrationNumber = nextNumber.Value;
+            }
+        }
+
+        /// <summary>
         /// Navigation Property for the Student cardinality.
         /// </summary>
         public virtual Student Student { get; set; }
@@ -673,5 +745,218 @@ namespace BITCollege_DP.Models
         /// Navigation Property for the Course cardinality.
         /// </summary>
         public virtual Course Course { get; set; }
+    }
+
+    /// <summary>
+    /// StoredProcedure class.
+    /// </summary>
+    public static class StoredProcedure
+    {
+        public static long? NextNumber(string discriminator)
+        {
+            try
+            {
+                long? returnValue = 0;
+                SqlConnection connection = new SqlConnection("Data Source=DYLANS-PC/EARTH;" +
+                "Initial Catalog=BITCollege_DPContext;Integrated Security=True");
+                SqlCommand storedProcedure = new SqlCommand("next_number", connection);
+                storedProcedure.CommandType = CommandType.StoredProcedure;
+                storedProcedure.Parameters.AddWithValue("@Discriminator", discriminator);
+                SqlParameter outputParameter = new SqlParameter("@NewVal", SqlDbType.BigInt)
+                {
+                    Direction = ParameterDirection.Output
+                };
+                storedProcedure.Parameters.Add(outputParameter);
+                connection.Open();
+                storedProcedure.ExecuteNonQuery();
+                connection.Close();
+                returnValue = (long?)outputParameter.Value;
+                return returnValue;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while executing the stored procedure.", ex);
+            }
+
+        }
+    }
+
+
+    /// <summary>
+    /// NextUniqueNumber class.
+    /// </summary>
+    public abstract class NextUniqueNumber
+    {
+        [Key]
+        [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
+        public int NextUniqueNumberId { get; set; }
+
+        protected static BITCollege_DPContext dbContext = new BITCollege_DPContext();
+
+        [Required(ErrorMessage = "Next available number is required.")]
+        public long NextAvailableNumber { get; set; }
+
+
+    }
+
+    /// <summary>
+    /// NextStudent Model. Represents the next student being created.
+    /// </summary>
+    public class NextStudent : NextUniqueNumber
+    {
+        private int nextNumber = 20000000;
+
+        private static NextStudent nextStudent;
+
+        private NextStudent()
+        {
+            NextAvailableNumber = nextNumber;
+        }
+
+        public static NextStudent GetInstance()
+        {
+
+            if (nextStudent == null)
+            {
+                nextStudent = dbContext.NextStudents.SingleOrDefault();
+
+                if (nextStudent == null)
+                {
+                    nextStudent = new NextStudent();
+                    dbContext.NextUniqueNumbers.Add(nextStudent);
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return nextStudent;
+        }
+    }
+
+    /// <summary>
+    /// NextRegistration Model. Represents the next registration being created.
+    /// </summary>
+    public class NextRegistration : NextUniqueNumber
+    {
+        private int nextNumber = 700;
+
+        private static NextRegistration nextRegistration;
+
+        private NextRegistration()
+        {
+            NextAvailableNumber = nextNumber;
+        }
+
+        public static NextRegistration GetInstance()
+        {
+            if (nextRegistration == null)
+            {
+                nextRegistration = dbContext.NextRegistrations.SingleOrDefault();
+
+                if (nextRegistration == null)
+                {
+                    nextRegistration = new NextRegistration();
+                    dbContext.NextUniqueNumbers.Add(nextRegistration);
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return nextRegistration;
+        }
+    }
+
+    /// <summary>
+    /// NextGradeCourse. Represents the next graded course being made.
+    /// </summary>
+    public class NextGradedCourse : NextUniqueNumber
+    {
+        private int nextNumber = 200000;
+
+        private static NextGradedCourse nextGradedCourse;
+
+        private NextGradedCourse()
+        {
+            NextAvailableNumber = nextNumber;
+        }
+
+        public static NextGradedCourse GetInstance()
+        {
+            if (nextGradedCourse == null)
+            {
+                nextGradedCourse = dbContext.NextGradedCourses.SingleOrDefault();
+
+                if (nextGradedCourse == null)
+                {
+                    nextGradedCourse = new NextGradedCourse();
+                    dbContext.NextUniqueNumbers.Add(nextGradedCourse);
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return nextGradedCourse;
+        }
+    }
+
+    /// <summary>
+    /// NextAuditCourse Model. Represents the next audit course being created.
+    /// </summary>
+    public class NextAuditCourse : NextUniqueNumber
+    {
+        private int nextNumber = 2000;
+
+        private static NextAuditCourse nextAuditCourse;
+
+        private NextAuditCourse()
+        {
+            NextAvailableNumber = nextNumber;
+        }
+
+        public static NextAuditCourse GetInstance()
+        {
+            if (nextAuditCourse == null)
+            {
+                nextAuditCourse = dbContext.NextAuditCourses.SingleOrDefault();
+
+                if (nextAuditCourse == null)
+                {
+                    nextAuditCourse = new NextAuditCourse();
+                    dbContext.NextUniqueNumbers.Add(nextAuditCourse);
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return nextAuditCourse;
+        }
+    }
+
+    /// <summary>
+    /// NextMasteryCourse Model. Represents the next mastery course being created.
+    /// </summary>
+    public class NextMasteryCourse : NextUniqueNumber
+    {
+        private int nextNumber = 20000;
+
+        private static NextMasteryCourse nextMasteryCourse;
+
+        private NextMasteryCourse()
+        {
+            NextAvailableNumber = nextNumber;
+        }
+
+        public static NextMasteryCourse GetInstance()
+        {
+            if (nextMasteryCourse == null)
+            {
+                nextMasteryCourse = dbContext.NextMasteryCourses.SingleOrDefault();
+
+                if (nextMasteryCourse == null)
+                {
+                    nextMasteryCourse = new NextMasteryCourse();
+                    dbContext.NextUniqueNumbers.Add(nextMasteryCourse);
+                    dbContext.SaveChanges();
+                }
+            }
+
+            return nextMasteryCourse;
+        }
     }
 }
