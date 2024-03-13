@@ -117,7 +117,7 @@ namespace BITCollege_DP.Models
         /// </summary>
         public void SetNextStudentNumber()
         {
-            string discriminator = "S";
+            string discriminator = "NextStudent";
 
             long? nextNumber = StoredProcedure.NextNumber(discriminator);
 
@@ -450,9 +450,9 @@ namespace BITCollege_DP.Models
         /// <summary>
         /// Method for TuitionRateAdjustment.
         /// </summary>
-        public override double TuitionRateAdjustment(Student Student)
+        public override double TuitionRateAdjustment(Student student)
         {
-            throw new NotImplementedException();
+            return TuitionRateFactor;
         }
 
         /// <summary>
@@ -486,6 +486,8 @@ namespace BITCollege_DP.Models
         private const double HONOURS_LOWER_LIMIT = 3.70;
         private const double HONOURS_UPPER_LIMIT = 4.50;
         private const double HONOURS_TUITION_RATE_FACTOR = 0.9;
+
+        Course courseFee;
 
         /// <summary>
         /// Method for HonoursState.
@@ -522,9 +524,19 @@ namespace BITCollege_DP.Models
         /// <summary>
         /// Method for TuitionRateAdjustment.
         /// </summary>
-        public override double TuitionRateAdjustment(Student Student)
+        public override double TuitionRateAdjustment(Student student)
         {
-            throw new NotImplementedException();
+            IQueryable<Registration> courses = dbContext.Registrations.Where(x => x.StudentId == student.StudentId && x.Grade != null);
+            int completedCoursesCount = courses.Count();
+
+            if (student.GradePointState == ProbationState.GetInstance() && completedCoursesCount >= 5)
+            {
+                return courseFee.TuitionAmount * 0.035;
+            }
+            else
+            {
+                return courseFee.TuitionAmount * 0.075;
+            }
         }
 
         /// <summary>
@@ -631,7 +643,7 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override void SetNextCourseNumber()
         {
-            string discriminator = "G";
+            string discriminator = "NextGradedCourse";
 
             long? nextNumber = StoredProcedure.NextNumber(discriminator);
 
@@ -659,7 +671,7 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override void SetNextCourseNumber()
         {
-            string discriminator = "M";
+            string discriminator = "NextMasteryCourse";
 
             long? nextNumber = StoredProcedure.NextNumber(discriminator);
 
@@ -680,7 +692,7 @@ namespace BITCollege_DP.Models
         /// </summary>
         public override void SetNextCourseNumber()
         {
-            string discriminator = "A";
+            string discriminator = "NextAuditCourse";
 
             long? nextNumber = StoredProcedure.NextNumber(discriminator);
 
@@ -727,7 +739,7 @@ namespace BITCollege_DP.Models
         /// </summary>
         public void SetNextRegistrationNumber()
         {
-            string discriminator = "R";
+            string discriminator = "NextRegistration";
 
             long? nextNumber = StoredProcedure.NextNumber(discriminator);
 
@@ -758,8 +770,7 @@ namespace BITCollege_DP.Models
             try
             {
                 long? returnValue = 0;
-                SqlConnection connection = new SqlConnection("Data Source=DYLANS-PC/EARTH;" +
-                "Initial Catalog=BITCollege_DPContext;Integrated Security=True");
+                SqlConnection connection = new SqlConnection("Data Source=DYLANS-PC\\EARTH; Initial Catalog=BITCollege_DPContext; Integrated Security=True;");
                 SqlCommand storedProcedure = new SqlCommand("next_number", connection);
                 storedProcedure.CommandType = CommandType.StoredProcedure;
                 storedProcedure.Parameters.AddWithValue("@Discriminator", discriminator);
