@@ -338,6 +338,7 @@ namespace BITCollege_DP.Models
             LowerLimit = PROBATION_LOWER_LIMIT;
             UpperLimit = PROBATION_UPPER_LIMIT;
             TuitionRateFactor = PROBATION_TUITION_RATE_FACTOR;
+            
         }
 
         /// <summary>
