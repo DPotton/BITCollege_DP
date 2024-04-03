@@ -8,8 +8,8 @@
     internal sealed class Configuration : DbMigrationsConfiguration<BITCollege_DP.Data.BITCollege_DPContext>
     {
         public Configuration()
-        {
-            AutomaticMigrationsEnabled = false;
+       {
+           AutomaticMigrationsEnabled = false;
             ContextKey = "BITCollege_DP.Data.BITCollege_DPContext";
         }
 

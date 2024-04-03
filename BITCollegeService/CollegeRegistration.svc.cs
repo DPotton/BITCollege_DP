@@ -52,6 +52,13 @@ namespace BITCollegeService
         {
             try
             {
+                Student student = dbContext.Students.FirstOrDefault(s => s.StudentId == studentId);
+
+                if (student == null)
+                {
+                    return -300;
+                }
+
                 IQueryable<Registration> registrationQuery = dbContext.Registrations
                     .Where(r => r.StudentId == studentId && r.CourseId == courseId);
 
@@ -71,7 +78,7 @@ namespace BITCollegeService
                     }
                 }
 
-                Student student = dbContext.Students.FirstOrDefault(s => s.StudentId == studentId);
+                
 
                 double adjustedTuition = registerCourse.TuitionAmount * student.GradePointState.TuitionRateAdjustment(student);
 
@@ -95,7 +102,7 @@ namespace BITCollegeService
 
                 return 0;
             }
-            catch (Exception)
+            catch (ArgumentException)
             {
                 return -300;
             }
