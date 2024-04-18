@@ -15,8 +15,4 @@ namespace Utility
         MASTERY,
         AUDIT
     }
-
-
-
-
 }

@@ -1,9 +1,18 @@
-﻿using BITCollege_DP.Data;
+﻿/*
+ * Name:    Dylan Potton
+ * Program: Business Information Technology
+ * Course:  ADEV-3008 Programming 3
+ * Created: 04/01/2024
+ */
+
+using BITCollege_DP.Data;
 using BITCollege_DP.Models;
 using System;
+using BITCollegeWindows.CollegeRegistrationService;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -17,11 +26,9 @@ namespace BITCollegeWindows
 
         BITCollege_DPContext db = new BITCollege_DPContext();
 
+        CollegeRegistrationClient service = new CollegeRegistrationClient();
 
-        ///Given: Student and Registration data will be retrieved
-        ///in this form and passed throughout application
-        ///These variables will be used to store the current
-        ///Student and selected Registration
+        // Create a new instance of the ConstructorData class
         ConstructorData constructorData = new ConstructorData();
 
         /// <summary>
@@ -31,9 +38,77 @@ namespace BITCollegeWindows
         public StudentData()
         {
             InitializeComponent();
+
             this.studentNumberMaskedTextBox.Leave += StudentNumberMaskedTextBox_Leave;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the StudentData class with data from the specified ConstructorData object.
+        /// </summary>
+        /// <param name="constructor"></param>
+        public StudentData (ConstructorData constructor)
+        {
+            InitializeComponent();
+
+            constructorData = constructor;
+            this.constructorData.studentData = constructor.studentData;
+            this.constructorData.registrationData = constructor.registrationData;
+            this.constructorData.courseData = constructor.courseData;
+            
+            
+        }
+
+        /// <summary>
+        /// Populates the constructorData object with current student and registration data.
+        /// </summary>
+        private void PopulateConstructorData()
+        {
+            Student selectedStudent = studentBindingSource.Current as Student;
+            Registration selectedRegistration = registrationBindingSource.Current as Registration;
+
+            constructorData = new ConstructorData
+            {
+                studentData = selectedStudent,
+                registrationData = selectedRegistration
+            };
+        }
+
+
+        /// <summary>
+        /// Opens the Grading form with constructor data and closes the current form.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void lnkUpdateGrade_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            PopulateConstructorData();
+            // Open the grading form passing constructorData
+            Grading grading = new Grading(constructorData);
+            grading.MdiParent = this.MdiParent;
+            grading.Show();
+            this.Close();
+        }
+
+        /// <summary>
+        /// Opens the History form with constructor data and closes the current form.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void lnkViewDetails_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            PopulateConstructorData();
+            History history = new History(constructorData);
+            history.MdiParent = this.MdiParent;
+            history.Show();
+            this.Close();
+        }
+
+        /// <summary>
+        /// Validates and processes a student number input. 
+        /// Checks if the student exists in the database and updates the UI accordingly.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StudentNumberMaskedTextBox_Leave(object sender, EventArgs e)
         {
             string studentNumberString = studentNumberMaskedTextBox.Text;
@@ -47,10 +122,8 @@ namespace BITCollegeWindows
             // Try parsing the student number string to a long
             if (!long.TryParse(studentNumberString, out studentNumber))
             {
-                // Handle invalid input here (e.g., show error message)
-                MessageBox.Show("Invalid student number format.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 studentNumberMaskedTextBox.Focus();
-                return; // Exit the method
+                return;
             }
 
             // Define LINQ-to-SQL Server query selecting data from the Students table
@@ -58,128 +131,68 @@ namespace BITCollegeWindows
                                where student.StudentNumber == studentNumber
                                select student;
 
-            var studentRecord = studentQuery.FirstOrDefault(); 
+            Student studentRecord = studentQuery.FirstOrDefault();
+
 
             if (studentRecord == null)
             {
                 // No student record found
                 lnkUpdateGrade.Enabled = false;
                 lnkViewDetails.Enabled = false;
-                studentBindingSource.DataSource = typeof(Student); 
-                registrationBindingSource1.DataSource = typeof(Registration);
-                MessageBox.Show("The student number entered does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                studentBindingSource.DataSource = typeof(Student);
+                registrationBindingSource.DataSource = typeof(Registration);
+
+                MessageBox.Show($"Student {studentNumber} does not exist.", "Invalid Student Number",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                 studentNumberMaskedTextBox.Focus();
+                return;
             }
             else
             {
-                // Student record found
                 studentBindingSource.DataSource = studentRecord;
+                constructorData.studentData = studentRecord;
 
                 // Define LINQ-to-SQL Server query selecting all Registrations
                 var registrationQuery = from registration in db.Registrations
                                         where registration.StudentId == studentRecord.StudentId
                                         select registration;
 
-                var registrationRecords = registrationQuery.ToList(); // Retrieve registration records
+                var registrationRecords = registrationQuery.ToList();
+
+
 
                 if (registrationRecords.Count == 0)
                 {
-                    // No registration records found
+                    // No records found
                     lnkUpdateGrade.Enabled = false;
                     lnkViewDetails.Enabled = false;
-                    registrationBindingSource1.DataSource = typeof(Registration); // Clear previous results
+                    registrationBindingSource.DataSource = typeof(Registration);
                 }
                 else
                 {
-                    // Registration records found
+                    // Records found
                     lnkUpdateGrade.Enabled = true;
                     lnkViewDetails.Enabled = true;
-                    registrationBindingSource1.DataSource = registrationRecords;
+                    registrationBindingSource.DataSource = registrationRecords;
+                    registrationNumberComboBox.Focus();
                 }
             }
 
-            this.Refresh();
-        }
-
-            /// <summary>
-            /// given:  This constructor will be used when returning to StudentData
-            /// from another form.  This constructor will pass back
-            /// specific information about the student and registration
-            /// based on activites taking place in another form.
-            /// </summary>
-            /// <param name="constructorData">constructorData object containing
-            /// specific student and registration data.</param>
-            public StudentData (ConstructorData constructor)
-        {
-            InitializeComponent();
-            //Further code to be added.
+            return;
         }
 
         /// <summary>
-        /// given: Open grading form passing constructor data.
-        /// </summary>
-        private void lnkUpdateGrade_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            Grading grading = new Grading(constructorData);
-            grading.MdiParent = this.MdiParent;
-            grading.Show();
-            this.Close();
-        }
-
-
-        /// <summary>
-        /// given: Open history form passing constructor data.
-        /// </summary>
-        private void lnkViewDetails_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            History history = new History(constructorData);
-            history.MdiParent = this.MdiParent;
-            history.Show();
-            this.Close();
-        }
-
-        /// <summary>
-        /// given:  Opens the form in top right corner of the frame.
+        /// Sets up initial form settings such as location and focus.
         /// </summary>
         private void StudentData_Load(object sender, EventArgs e)
         {
-            //keeps location of form static when opened and closed
-
-
             this.Location = new Point(0, 0);
-
-            // Get the entered student number string from the MaskedTextBox
-            string enteredStudentNumberString = studentNumberMaskedTextBox.Text;
-
-            // Convert the entered student number string to a long
-            long enteredStudentNumber;
-            if (!long.TryParse(enteredStudentNumberString, out enteredStudentNumber))
-            {
-                // Handle invalid input here, such as displaying an error message
-                return;
-            }
-
-            // LINQ query using method syntax to retrieve student data based on student number
-            IEnumerable<Student> query = db.Students
-                .Where(student => student.StudentNumber == enteredStudentNumber);
-
-            // Execute the query and get the result
-            Student studentData = query.FirstOrDefault();
-
-
-            courseBindingSource.DataSource = (from results in db.Courses select results).ToList();
-
-            studentBindingSource.DataSource = (from results in db.Students select results).ToList();
-
-            registrationBindingSource1.DataSource = (from results in db.Registrations select results).ToList();
-
-            this.Refresh();
 
             lnkUpdateGrade.Enabled = false;
             lnkViewDetails.Enabled = false;
 
             studentNumberMaskedTextBox.Focus();
-
         }
     }
 }

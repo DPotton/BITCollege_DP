@@ -8,6 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace BITCollegeWindows.CollegeRegistrationService {
     
     
@@ -83,6 +85,11 @@ namespace BITCollegeWindows.CollegeRegistrationService {
         
         public System.Threading.Tasks.Task<System.Nullable<double>> UpdateGradeAsync(double grade, int registrationId, string notes) {
             return base.Channel.UpdateGradeAsync(grade, registrationId, notes);
+        }
+
+        internal void UpdateGrade(double? grade, int registrationId, string notes)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using BITCollege_DP.Models;
+﻿using BITCollege_DP.Data;
+using BITCollege_DP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace BITCollegeWindows
     /// </summary>
     public class ConstructorData
     {
+        BITCollege_DPContext db = new BITCollege_DPContext();
+
         public Student studentData { get; set; }
 
         public Registration registrationData { get; set; }
